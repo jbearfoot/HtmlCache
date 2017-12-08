@@ -1,0 +1,26 @@
+﻿using EPiServer.Core;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace HtmlCache
+{
+    public interface IRenderingContext
+    {
+        void AddDependencies(IEnumerable<ContentReference> contentLinks);
+        void AddChildrenListingDependency(ContentReference contentLink);
+        bool PreventCache { get; set; }
+
+        IRenderingContext ParentContext { get; }
+    }
+
+    public static class RenderingContextExtensions
+    {
+        public static void AddDependency(this IRenderingContext context, ContentReference contentLink)
+        {
+            context.AddDependencies(new[] { contentLink });
+        }
+    }
+}
