@@ -17,6 +17,7 @@ using EPiServer.Web.Mvc;
 using System.Reflection;
 using System.ComponentModel.DataAnnotations;
 using EPiServer.Framework.DataAnnotations;
+using System.IO;
 
 namespace HtmlCache.Internal
 {
@@ -57,7 +58,20 @@ namespace HtmlCache.Internal
             defaultRendering();
         }
 
-        
+        //This methods are overloade just to make sure the default registered renderer is called and not this base class
+        public override Func<RouteValueDictionary, string, string> CustomSettingsAttributeWriter { get => _defaultRenderer.CustomSettingsAttributeWriter; set => _defaultRenderer.CustomSettingsAttributeWriter = value; }
+        public override MvcHtmlString BeginEditSection(HtmlHelper helper, string htmlElement, string propertyKey, string propertyName, object htmlAttributes)
+        {
+            return _defaultRenderer.BeginEditSection(helper, htmlElement, propertyKey, propertyName, htmlAttributes);
+        }
+        public override EditContainer CreateEditElement(HtmlHelper helper, string epiPropertyKey, string epiPropertyName, string editElementName, string editElementCssClass, Func<string> renderSettingsAttributeWriter, Func<string> editorSettingsAttributeWriter, TextWriter writer)
+        {
+            return _defaultRenderer.CreateEditElement(helper, epiPropertyKey, epiPropertyName, editElementName, editElementCssClass, renderSettingsAttributeWriter, editorSettingsAttributeWriter, writer);
+        }
+        public override MvcHtmlString EditAttributes(HtmlHelper helper, string propertyKey, string propertyName)
+        {
+            return _defaultRenderer.EditAttributes(helper, propertyKey, propertyName);
+        }
 
         private static string CreateCacheKey(IEnumerable<ContentReference> contentDependencies, params string[] variables)
         {
