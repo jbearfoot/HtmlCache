@@ -257,7 +257,7 @@
   <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" Condition="'$(VSToolsPath)' != ''" />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" Condition="false" />
   <ItemGroup>
-    <Compile Include="..\..\..\..\.nuget\packages\microsoft.extensions.hashcodecombiner.sources\2.0.0\contentFiles\cs\netstandard1.0\HashCodeCombiner.cs">
+    <Compile Include="..\packages\Microsoft.Extensions.HashCodeCombiner.Sources.2.0.0\contentFiles\cs\netstandard1.0\HashCodeCombiner.cs">
       <Link>HashCodeCombiner.cs</Link>
     </Compile>
     <Compile Include="Business\AdministratorRegistrationPage.cs" />
