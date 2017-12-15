@@ -27,6 +27,7 @@ namespace HtmlCache.Internal
         public IEnumerable<ContentReference> ContentItems => _contentItems;
         public IEnumerable<ContentReference> Listings => _childrenListings;
 
+        public bool DependentOnAllContent { get; set; }
         public bool PreventCache { get; set; } = false;
 
         public void AddChildrenListingDependency(ContentReference contentLink)

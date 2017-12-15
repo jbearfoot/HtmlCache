@@ -9,6 +9,7 @@ namespace HtmlCache
 {
     public interface IRenderingContext
     {
+        bool DependentOnAllContent { get; set; }
         void AddDependencies(IEnumerable<ContentReference> contentLinks);
         void AddChildrenListingDependency(ContentReference contentLink);
         bool PreventCache { get; set; }

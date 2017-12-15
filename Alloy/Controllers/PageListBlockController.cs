@@ -53,7 +53,7 @@ namespace Alloy.Controllers
             var listRoot = currentBlock.Root;
             if (currentBlock.Recursive)
             {
-                _renderingContextResolver.Current.PreventCache = true;
+                _renderingContextResolver.Current.DependentOnAllContent = true;
                 if (currentBlock.PageTypeFilter != null)
                 {
                     pages = contentLocator.FindPagesByPageType(listRoot, true, currentBlock.PageTypeFilter.ID);

@@ -21,6 +21,7 @@ namespace HtmlCache.Internal
         public const string ContextKey = "Epi:HtmlCacheContext";
         private const string DependencyPrefix = "Ep:h:c:";
         private const string ListingDependencyPrefix = "Ep:h:l:";
+        private const string AllDependencyKey = "Ep:a:l:";
 
         public DefaultHtmlCache(IDistributedCache htmlCache, IRequestCache requestCache, IPrincipalAccessor principalAccessor)
         {
@@ -69,12 +70,18 @@ namespace HtmlCache.Internal
                 if (parentContext != null)
                     _htmlCache.AddDependency($"{DependencyPrefix}{currentContext.Key}", parentContext.Key);
 
-                foreach (var contentLink in currentContext.ContentItems)
-                    _htmlCache.AddDependency($"{DependencyPrefix}{contentLink.ToReferenceWithoutVersion()}", currentContext.Key);
+                if (currentContext.DependentOnAllContent)
+                {
+                    _htmlCache.AddDependency(AllDependencyKey, currentContext.Key);
+                }
+                else
+                {
+                    foreach (var contentLink in currentContext.ContentItems)
+                        _htmlCache.AddDependency($"{DependencyPrefix}{contentLink.ToReferenceWithoutVersion()}", currentContext.Key);
 
-                foreach (var childListing in currentContext.Listings)
-                    _htmlCache.AddDependency($"{ListingDependencyPrefix}{childListing.ToReferenceWithoutVersion()}", currentContext.Key);
-
+                    foreach (var childListing in currentContext.Listings)
+                        _htmlCache.AddDependency($"{ListingDependencyPrefix}{childListing.ToReferenceWithoutVersion()}", currentContext.Key);
+                }
             }
             _requestCache.Set(ContextKey, parentContext);
         }
@@ -92,6 +99,10 @@ namespace HtmlCache.Internal
         private void RemoveKey(string key, string prefix = null)
         {
             var affectedKeys = new HashSet<string>();
+            var commonDependencies = _htmlCache.GetDependencies(AllDependencyKey);
+            foreach (var commonDependency in commonDependencies)
+                affectedKeys.Add(commonDependency);
+
             CollectDependencyKeys(affectedKeys, key, prefix);
 
             _htmlCache.Remove(affectedKeys);
