@@ -31,42 +31,52 @@ namespace HtmlCache.Internal
 
         public string GetOrAdd(string key, Func<IRenderingContext, string> renderingContext)
         {
-            var currentContext = _requestCache.Get<RenderingContext>(ContextKey);
+            var contextResult = BeginContext(key);
+            if (contextResult.CachedResult != null)
+                return contextResult.CachedResult;
 
-            //Do not use cache for authenticated users or if currentContext prevents it
-            bool shouldCache = !(_principalAccessor.Principal.Identity.IsAuthenticated || (currentContext?.PreventCache).GetValueOrDefault());
-            var cachedResult = shouldCache ? _htmlCache.Get(key) : (string)null;
-            if (cachedResult != null)
-                return cachedResult;
-          
-            var newContext = new RenderingContext(currentContext, key)
-            {
-                PreventCache = !shouldCache
-            };
-            _requestCache.Set(ContextKey, newContext);
+            var htmlResult = renderingContext(contextResult.StartedContext);
 
-            var htmlResult = renderingContext(newContext);
-
-            //If something should not be cached like a personalized content area item, then we should not cache the content area as whole either
-            if (currentContext != null && newContext.PreventCache)
-                currentContext.PreventCache = newContext.PreventCache;
-
-            if (!newContext.PreventCache && shouldCache)
-            {
-                _htmlCache.Set(key, htmlResult);
-                if (currentContext != null)
-                    _htmlCache.AddDependency($"{DependencyPrefix}{key}", currentContext.Key);
-
-                foreach (var contentLink in newContext.ContentItems)
-                    _htmlCache.AddDependency($"{DependencyPrefix}{contentLink.ToReferenceWithoutVersion()}", key);
-
-                foreach (var childListing in newContext.Listings)
-                    _htmlCache.AddDependency($"{ListingDependencyPrefix}{childListing.ToReferenceWithoutVersion()}", key);
-
-            }
-            _requestCache.Set(ContextKey, currentContext);
+            CompleteContext(contextResult.StartedContext, htmlResult);
 
             return htmlResult;
+        }
+
+        public RenderingContextResult BeginContext(string key)
+        {
+            bool authenticated = _principalAccessor.Principal.Identity.IsAuthenticated;
+            var cachedResult = (authenticated) ? (string)null : _htmlCache.Get(key);
+            if (cachedResult != null)
+                return new RenderingContextResult { CachedResult = cachedResult };
+
+            var parentContext = _requestCache.Get<RenderingContext>(ContextKey);
+            var currentContext = new RenderingContext(parentContext, key);
+            _requestCache.Set(ContextKey, currentContext);
+
+            return new RenderingContextResult { StartedContext = currentContext };
+        }
+
+        public void CompleteContext(IRenderingContext currentContext, string htmlResult)
+        {
+            var parentContext = currentContext.ParentContext;
+            //If something should not be cached like a personalized content area item, then we should not cache the content area as whole either
+            if (parentContext != null && currentContext.PreventCache)
+                parentContext.PreventCache = currentContext.PreventCache;
+
+            if (!currentContext.PreventCache && !_principalAccessor.Principal.Identity.IsAuthenticated)
+            {
+                _htmlCache.Set(currentContext.Key, htmlResult);
+                if (parentContext != null)
+                    _htmlCache.AddDependency($"{DependencyPrefix}{currentContext.Key}", parentContext.Key);
+
+                foreach (var contentLink in currentContext.ContentItems)
+                    _htmlCache.AddDependency($"{DependencyPrefix}{contentLink.ToReferenceWithoutVersion()}", currentContext.Key);
+
+                foreach (var childListing in currentContext.Listings)
+                    _htmlCache.AddDependency($"{ListingDependencyPrefix}{childListing.ToReferenceWithoutVersion()}", currentContext.Key);
+
+            }
+            _requestCache.Set(ContextKey, parentContext);
         }
 
         internal void ContentChanged(ContentReference contentLink)

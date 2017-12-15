@@ -12,7 +12,9 @@ namespace HtmlCache
         void AddDependencies(IEnumerable<ContentReference> contentLinks);
         void AddChildrenListingDependency(ContentReference contentLink);
         bool PreventCache { get; set; }
-
+        string Key { get; }
+        IEnumerable<ContentReference> ContentItems { get; }
+        IEnumerable<ContentReference> Listings { get; }
         IRenderingContext ParentContext { get; }
     }
 

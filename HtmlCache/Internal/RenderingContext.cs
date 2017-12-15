@@ -24,8 +24,8 @@ namespace HtmlCache.Internal
         public string Key => _key;
         public IRenderingContext ParentContext => _parentContext;
 
-        public IList<ContentReference> ContentItems => _contentItems;
-        public IList<ContentReference> Listings => _childrenListings;
+        public IEnumerable<ContentReference> ContentItems => _contentItems;
+        public IEnumerable<ContentReference> Listings => _childrenListings;
 
         public bool PreventCache { get; set; } = false;
 
